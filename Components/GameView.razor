@@ -1,0 +1,74 @@
+@inherits ComponentBase
+
+<div class="h-100 w-100 d-flex flex-column align-items-center justify-content-between">
+    <div class="p-3 w-100 bg-primary d-flex justify-content-start align-items-center">
+         <button disabled="@(!_gameRender)" type="button" class="btn btn-light me-1" @onclick="ZoomIn">Zoom In</button>
+         <button disabled="@(!_gameRender)" type="button" class="btn btn-light me-1" @onclick="ZoomOut">Zoom Out</button>
+         <button disabled="@(!_gameRender)" type="button" class="btn btn-light me-1" @onclick="Center">Center</button>
+         <button disabled="@(!_gameRender)" type="button" class="btn btn-light me-1" @onclick="CenterObject">Object</button>
+         <button disabled="@(!_gameRender)" type="button" class="btn btn-light me-1" @onclick="Focus">Focus</button>
+    </div>
+    <div @ref="_container" class="h-100 w-100 d-flex align-items-center justify-content-center">
+
+    </div>
+    <div class="p-3 w-100 bg-primary">
+
+    </div>
+</div>
+
+@code
+{
+    [Inject]
+    public IJSRuntime Js {get; set;}
+
+    private IJSObjectReference _module;
+
+    private ElementReference _container;
+
+    private DotNetObjectReference<GameView> _dotNetObject;
+    
+    private bool _gameRender;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            _dotNetObject = DotNetObjectReference.Create(this);
+            _module = await Js.InvokeAsync<IJSObjectReference>("import", "./js/game.js");
+            await _module.InvokeVoidAsync("init", _container, _dotNetObject);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    [JSInvokable("gameRender")]
+    public void GameRender(bool gameRender)
+    {
+        _gameRender = gameRender;
+        StateHasChanged();
+    }
+
+    private async Task ZoomIn()
+    {
+        await _module.InvokeVoidAsync("zoomIn");
+    }
+
+    private async Task ZoomOut()
+    {
+        await _module.InvokeVoidAsync("zoomOut");
+    }
+
+    private async Task Center()
+    {
+        await _module.InvokeVoidAsync("center");
+    }
+
+    private async Task CenterObject()
+    {
+        await _module.InvokeVoidAsync("centerObject");
+    }
+
+    private async Task Focus()
+    {
+        await _module.InvokeVoidAsync("focus");
+    }
+}
